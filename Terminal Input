@@ -69,6 +69,5 @@ def runAllStrings(ls):
         bash_it(sudoReplace(ls[i]))
 def installOpenVpn():
     return ['sudo apt-get update','sudo apt-get install openvpn','sudo apt install easy-rsa -y','sudo -s','wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg|apt-key add -',"echo 'deb http://build.openvpn.net/debian/openvpn/release/2.5 focal main' > /etc/apt/sources.list.d/openvpn-aptrepo.list','apt-get update && apt-get install openvpn",'exit','mkdir ~/easy-rsa','ln -s /usr/share/easy-rsa/* ~/easy-rsa/','cd ~/easy-rsa/','./easyrsa init-pki']
-    
 homeIt()
 createPassScript()
