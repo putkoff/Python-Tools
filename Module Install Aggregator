@@ -1,0 +1,39 @@
+import os
+import functions as f
+def foldList(x):
+    return os.listdir(x)
+lsN = []
+foldLs = foldList(os.getcwd())
+for i in range(0,len(foldLs)):
+   if '.py' in foldLs[i]:
+       lsN.append(foldLs[i])
+input(lsN)
+new = ''
+lsC = ['import','as','from']
+for i in range(0,len(lsN)):
+    n = f.reader(lsN[i])
+    m = n.split('\n')
+    for k in range(0,len(m)):
+        mm = m[k]
+        for j in range(0,len(lsC)):
+            if mm[:len(lsC[j])] == lsC[j]:
+                new = new+mm+'\n'
+f.pen(new,'imports.py')
+imps = new.split('\n')
+input(imps)
+foldLs = foldList(os.getcwd())
+lsN = ['import','as','from']
+for i in range(0,len(foldLs)):
+   lsN.append(foldLs[i].split('.')[0])
+lsA = []
+n = ''
+for i in range(0,len(imps)):
+   nImps = imps[i].split('as')[0].split('.')[0].split(' ')
+   for k in range(0,len(nImps)):
+      if nImps[k] not in lsN and nImps[k] not in lsA:
+         lsA.append(nImps[k])
+for i in range(0,len(lsA)):
+   if lsA[i]t in ['',' ','\n','\t']:
+    n = n + 'pip install '+lsA[i]+'\n'
+f.pen(n,'installs.txt')
+print(lsA)
