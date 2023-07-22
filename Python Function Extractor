@@ -14,7 +14,7 @@ def get_funcs(file):
         else:
             funcs[func.name] = [func]
     return funcs
-
+ 
 def get_imports(file):
     with open(file, "r") as source:
         tree = ast.parse(source.read())
