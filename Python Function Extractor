@@ -1,0 +1,85 @@
+import ast
+import astunparse
+import PySimpleGUI as psg
+
+def get_funcs(file):
+    with open(file, "r") as source:
+        tree = ast.parse(source.read())
+    all_funcs = [func for func in ast.walk(tree) if isinstance(func, ast.FunctionDef)]
+    funcs = {}
+    for func in all_funcs:
+        if func.name in funcs:
+            funcs[func.name].append(func)
+        else:
+            funcs[func.name] = [func]
+    return funcs
+
+def get_imports(file):
+    with open(file, "r") as source:
+        tree = ast.parse(source.read())
+    return [name.name for imp in ast.walk(tree) if isinstance(imp, ast.Import) for name in imp.names]
+
+def get_func_deps(func_name, file):
+    funcs_dict = get_funcs(file)
+    funcs = funcs_dict[func_name]
+    if len(funcs) == 1:
+        return funcs[0], astunparse.unparse(funcs[0])
+    elif len(funcs) > 1:
+        func_sources = [astunparse.unparse(func) for func in funcs]
+        if all(source == func_sources[0] for source in func_sources):
+            return funcs[0], func_sources[0]
+        else:
+            layout = [[psg.Text('Select a function:')],
+                      [psg.Multiline(source, size=(60, 20), disabled=True) for source in func_sources],
+                      [psg.Radio('', group_id='choice', key=f'choice{i}') for i, _ in enumerate(func_sources)],
+                      [psg.Button('OK')]]
+            window = psg.Window('Choose Function', layout)
+            event, values = window.read()
+            window.close()
+            choice = values[f'choice{event[5]}']
+            return funcs[choice], func_sources[choice]
+def create_py_file(func_names, file):
+    imports = get_imports(file)
+    all_deps = set()
+    for name in func_names:
+        all_deps.add(name)
+        all_deps.update(get_func_deps(name, file)[1])
+    with open(file, "r") as source:
+        tree = ast.parse(source.read())
+    funcs = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in all_deps]
+    with open("output.py", "w") as output:
+        for imp in imports:
+            output.write(f"import {imp}\n")
+        output.write("\n")
+        for func in funcs:
+            output.write(ast.unparse(func))
+            output.write("\n\n")
+
+layout = [
+    [psg.FileBrowse(file_types=(("Python Files", "*.py"),), key='-FILEBROWSE-')],
+    [psg.Button("Load Functions")],
+    [psg.Listbox(values=[], size=(40, 10), key='-LIST-', enable_events=True, select_mode='multiple')],
+    [psg.Button('Grab Functions'), psg.Button('Exit')]
+]
+
+window = psg.Window('Python Function Browser', layout)
+
+while True:
+    event, values = window.read()
+    
+    if event in (psg.WINDOW_CLOSED, 'Exit'):
+        break
+
+    if event == 'Load Functions':
+        file = values['-FILEBROWSE-']  # get the selected file path
+        if file.endswith('.py'):
+            funcs = get_funcs(file)
+            window['-LIST-'].update(list(funcs.keys()))
+        else:
+            psg.popup("Please select a Python file.")
+    
+    if event == 'Grab Functions':
+        func_names = values['-LIST-']
+        create_py_file(func_names, file)
+
+window.close()
