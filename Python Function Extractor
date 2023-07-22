@@ -1,7 +1,6 @@
 import os
 import ast
 import PySimpleGUI as psg
-
 def get_imp_defs(file):
     func_ls,class_ls = [],[]
     with open(file, "r") as source:
