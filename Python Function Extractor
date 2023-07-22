@@ -1,7 +1,7 @@
 import ast
 import astunparse
 import PySimpleGUI as psg
-
+ 
 def get_funcs(file):
     with open(file, "r") as source:
         tree = ast.parse(source.read())
