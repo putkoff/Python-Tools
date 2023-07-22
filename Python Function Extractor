@@ -1,7 +1,8 @@
+import os
 import ast
 import astunparse
 import PySimpleGUI as psg
- 
+
 def get_funcs(file):
     with open(file, "r") as source:
         tree = ast.parse(source.read())
@@ -36,9 +37,11 @@ def get_func_deps(func_name, file):
             window = psg.Window('Choose Function', layout)
             event, values = window.read()
             window.close()
-            choice = values[f'choice{event[5]}']
+            choice = [i for i in range(len(func_sources)) if values[f'choice{i}']][0]
             return funcs[choice], func_sources[choice]
-def create_py_file(func_names, file):
+
+
+def create_py_file(func_names, file, output_path):
     imports = get_imports(file)
     all_deps = set()
     for name in func_names:
@@ -47,18 +50,20 @@ def create_py_file(func_names, file):
     with open(file, "r") as source:
         tree = ast.parse(source.read())
     funcs = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in all_deps]
-    with open("output.py", "w") as output:
+    with open(output_path, "w") as output:
         for imp in imports:
             output.write(f"import {imp}\n")
         output.write("\n")
         for func in funcs:
-            output.write(ast.unparse(func))
+            output.write(astunparse.unparse(func))
             output.write("\n\n")
 
 layout = [
     [psg.FileBrowse(file_types=(("Python Files", "*.py"),), key='-FILEBROWSE-')],
     [psg.Button("Load Functions")],
     [psg.Listbox(values=[], size=(40, 10), key='-LIST-', enable_events=True, select_mode='multiple')],
+    [psg.Text('Save Location'), psg.InputText("", key='-SAVEFOLDER-', disabled=True), psg.Button('browse_save_location', key='-FOLDERBROWSE-')],
+    [psg.Text('Output Filename'), psg.InputText("output", key='-OUTPUTFILE-')],
     [psg.Button('Grab Functions'), psg.Button('Exit')]
 ]
 
@@ -70,6 +75,18 @@ while True:
     if event in (psg.WINDOW_CLOSED, 'Exit'):
         break
 
+    if event == '-FOLDERBROWSE-':
+        folder = psg.filedialog.askdirectory()  # open the folder dialog
+        if folder:
+            window['-SAVEFOLDER-'].update(folder)
+            output_filename = values['-OUTPUTFILE-']
+            if output_filename == 'output':
+                i = 1
+                while os.path.isfile(os.path.join(folder, f'{output_filename}_{i}.py')):
+                    i += 1
+                output_filename = f'{output_filename}_{i}'
+            window['-OUTPUTFILE-'].update(output_filename)
+
     if event == 'Load Functions':
         file = values['-FILEBROWSE-']  # get the selected file path
         if file.endswith('.py'):
@@ -80,6 +97,9 @@ while True:
     
     if event == 'Grab Functions':
         func_names = values['-LIST-']
-        create_py_file(func_names, file)
+        save_folder = values['-SAVEFOLDER-']
+        output_filename = values['-OUTPUTFILE-']+'.py'
+        output_path = os.path.join(save_folder, output_filename)
+        create_py_file(func_names, file, output_path)
 
 window.close()
