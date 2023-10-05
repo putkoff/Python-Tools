@@ -398,28 +398,28 @@ class ExtractionManager:
 
         # 4. Combine to generate standalone script
         self.output_file_contents = '\n\n'.join(required_imports+ class_definitions + function_definitions)
-    def check_destination(self,destination, output_file_name):
+    def check_destination_dir(self,destination_dir, output_file_name):
         # If both are None, set a default path in the current directory
-        if not destination and not output_file_name:
+        if not destination_dir and not output_file_name:
             return os.path.join(os.getcwd(), 'output.py')
 
         # If only a file name is provided, join it with the current directory
-        if not destination:
+        if not destination_dir:
             return os.path.join(os.getcwd(), output_file_name)
 
-        # If only a directory (destination) is provided, check if it's an actual directory
+        # If only a directory (destination_dir) is provided, check if it's an actual directory
         if not output_file_name:
-            if os.path.isdir(destination):
-                return os.path.join(destination, 'output.py')
+            if os.path.isdir(destination_dir):
+                return os.path.join(destination_dir, 'output.py')
             else:
-                return destination
+                return destination_dir
 
         # If both are provided, join them
-        return os.path.join(destination, output_file_name)
-    def save_the_file(self,destination=None,output_file_name=None):
-        write_to_file(file_path=self.check_destination(destination=destination,output_file_name=output_file_name),contents=self.output_file_contents)
-def initialize_extraction(file_path,function_name,destination=None,output_file_name=None):
+        return os.path.join(destination_dir, output_file_name)
+    def save_the_file(self,destination_dir=None,output_file_name=None):
+        write_to_file(file_path=self.check_destination_dir(destination_dir=destination_dir,output_file_name=output_file_name),contents=self.output_file_contents)
+def initialize_extraction(file_path,function_name,destination_dir_dir=None,output_file_name=None):
     extraction_manager = ExtractionManager(file_path)
     extraction_manager.finalize_extraction(function_name=function_name)
-    extraction_manager.save_the_file(destination=destination,output_file_name=output_file_name)
+    extraction_manager.save_the_file(destination_dir=destination_dir,output_file_name=output_file_name)
     return extraction_manager.output_file_contents
